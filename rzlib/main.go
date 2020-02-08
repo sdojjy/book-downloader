@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"flag"
 	"fmt"
 	"github.com/anaskhan96/soup"
@@ -35,27 +36,44 @@ func getHtml(url string) []byte {
 		req, err := http.NewRequest("GET", url, nil)
 		req.Close = true
 		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0")
+		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
+		req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+		req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-TW;q=0.6,fr;q=0.5")
 
 		response, err := client.Do(req)
-		if err != nil {
-			print(err)
-			continue
+		body := response.Body
+		if response.Header.Get("Content-Encoding") == "gzip" {
+			body, err = gzip.NewReader(response.Body)
+			if err != nil {
+				fmt.Println("http resp unzip is failed,err: ", err)
+			}
 		}
-		content, err := ioutil.ReadAll(response.Body)
+
 		if err != nil {
 			print(err)
-			deferClose(response.Body)
 			continue
 		}
 
-		out := make([]byte, len(content)*2)
-		out = out[:]
-		_, w, err := iconv.Convert(content, out, "gb2312", "utf-8")
+		//reader := transform.NewReader(body, simplifiedchinese.HZGB2312.NewEncoder())
+		//d, e := ioutil.ReadAll(reader)
+		//if e != nil {
+		//	panic(d)
+		//}
+		//deferClose(body)
+		//return d
+
+		r, err := iconv.NewReader(body, "gb2312", "utf-8")
 		if err != nil {
-			continue
+			deferClose(body)
+			panic(err)
 		}
-		deferClose(response.Body)
-		return out[:w]
+		out, err := ioutil.ReadAll(r)
+		if err != nil {
+			deferClose(body)
+			panic(err)
+		}
+		deferClose(body)
+		return out
 	}
 }
 
