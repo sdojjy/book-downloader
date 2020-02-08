@@ -112,9 +112,12 @@ func printContent(baseURL string) string {
 
 func getTextURL(htmlURL string) string {
 	//https://m.rzlib.net/b/52/52352/23791490.html
-	textURL := strings.ReplaceAll(htmlURL, ".html", ".txt")
-	//index := strings.Index(htmlURL, ".html")
-	return strings.ReplaceAll(textURL, "https://m.rzlib.net/b/103", "https://www.rzlib.net/b/txtg333")
+	index := strings.Index(htmlURL, ".html")
+	htmlURL = htmlURL[0:index]
+	ps := strings.Split(htmlURL, "/")
+	c := ps[len(ps)-1]
+	d := ps[len(ps)-2]
+	return fmt.Sprintf("https://www.rzlib.net/b/txtg333/%s/%s.txt", d, c)
 }
 
 func deferClose(c io.Closer) {
