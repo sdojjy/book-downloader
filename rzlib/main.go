@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/anaskhan96/soup"
 	"github.com/djimenez/iconv-go"
+	js "github.com/dop251/goja"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +15,8 @@ import (
 var client = &http.Client{}
 
 var firstURL string
+
+var vm = js.New()
 
 func init() {
 	flag.StringVar(&firstURL, "url", "https://m.rzlib.net/b/103/103300/48601197.html", "the first page")
@@ -63,21 +66,27 @@ func printContent(baseURL string) string {
 
 	chaptername := doc.Find("h1", "id", "chaptername").Text()
 	textURL := getTextURL(baseURL)
-	strs := strings.Split(string(getHtml(textURL)), "\n")
-	content := fmt.Sprintf("%s\n%s", chaptername, strs[0])
-	for i := 1; i < len(strs)-1; i++ {
-		regParam := strings.Split(strs[i], ",")
-		arg1 := strings.ReplaceAll(regParam[0], "cctxt=cctxt.replace(/", "")
-		arg1 = strings.ReplaceAll(arg1, "/g", "")
-		arg2 := strings.ReplaceAll(regParam[1], "'", "")
-		arg2 = strings.ReplaceAll(arg2, ");\r", "")
-		content = strings.ReplaceAll(content, arg1, arg2)
+	//strs := strings.Split(string(getHtml(textURL)), "\n")
+	//content := fmt.Sprintf("%s\n%s", chaptername, strs[0])
+	//for i := 1; i < len(strs)-1; i++ {
+	//	regParam := strings.Split(strs[i], ",")
+	//	arg1 := strings.ReplaceAll(regParam[0], "cctxt=cctxt.replace(/", "")
+	//	arg1 = strings.ReplaceAll(arg1, "/g", "")
+	//	arg2 := strings.ReplaceAll(regParam[1], "'", "")
+	//	arg2 = strings.ReplaceAll(arg2, ");\r", "")
+	//	content = strings.ReplaceAll(content, arg1, arg2)
+	//}
+	//content = strings.ReplaceAll(content, "var cctxt='", "")
+	_, err := vm.RunString(string(getHtml(textURL)))
+	if err != nil {
+		panic(err)
 	}
-	content = strings.ReplaceAll(content, "var cctxt='", "")
-	content = strings.ReplaceAll(content, "<br />", "\n")
-	content = strings.ReplaceAll(content, "&nbsp;", "")
-	content = strings.ReplaceAll(content, "';", "")
-	fmt.Print(content)
+	eval := vm.Get("cctxt").String()
+
+	eval = strings.ReplaceAll(eval, "<br />", "\n")
+	eval = strings.ReplaceAll(eval, "&nbsp;", "")
+	eval = strings.ReplaceAll(eval, "';", "")
+	fmt.Printf("%s\n%s", chaptername, eval)
 	fmt.Println()
 
 	link := doc.Find("a", "id", "pb_next").Attrs()["href"]
@@ -87,6 +96,7 @@ func printContent(baseURL string) string {
 func getTextURL(htmlURL string) string {
 	//https://m.rzlib.net/b/52/52352/23791490.html
 	textURL := strings.ReplaceAll(htmlURL, ".html", ".txt")
+	//index := strings.Index(htmlURL, ".html")
 	return strings.ReplaceAll(textURL, "https://m.rzlib.net/b/103", "https://www.rzlib.net/b/txtg333")
 }
 
