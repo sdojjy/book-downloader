@@ -39,7 +39,6 @@ func getHtml(url string) []byte {
 		response, err := client.Do(req)
 		if err != nil {
 			print(err)
-			deferClose(response.Body)
 			continue
 		}
 		content, err := ioutil.ReadAll(response.Body)
