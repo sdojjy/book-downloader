@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/anaskhan96/soup"
-	"github.com/djimenez/iconv-go"
 	js "github.com/dop251/goja"
+	"golang.org/x/net/html/charset"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -41,6 +41,11 @@ func getHtml(url string) []byte {
 		req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-TW;q=0.6,fr;q=0.5")
 
 		response, err := client.Do(req)
+		if err != nil {
+			print(err)
+			continue
+		}
+
 		body := response.Body
 		if response.Header.Get("Content-Encoding") == "gzip" {
 			body, err = gzip.NewReader(response.Body)
@@ -49,20 +54,8 @@ func getHtml(url string) []byte {
 			}
 		}
 
-		if err != nil {
-			print(err)
-			continue
-		}
-
-		//reader := transform.NewReader(body, simplifiedchinese.HZGB2312.NewEncoder())
-		//d, e := ioutil.ReadAll(reader)
-		//if e != nil {
-		//	panic(d)
-		//}
-		//deferClose(body)
-		//return d
-
-		r, err := iconv.NewReader(body, "gb2312", "utf-8")
+		r, err := charset.NewReader(body, response.Header.Get("Content-Type"))
+		//r, err := iconv.NewReader(body, "gb2312", "utf-8")
 		if err != nil {
 			deferClose(body)
 			panic(err)
@@ -80,20 +73,7 @@ func getHtml(url string) []byte {
 func printContent(baseURL string) string {
 	out := getHtml(baseURL)
 	doc := soup.HTMLParse(string(out))
-
-	chaptername := doc.Find("h1", "id", "chaptername").Text()
 	textURL := getTextURL(baseURL)
-	//strs := strings.Split(string(getHtml(textURL)), "\n")
-	//content := fmt.Sprintf("%s\n%s", chaptername, strs[0])
-	//for i := 1; i < len(strs)-1; i++ {
-	//	regParam := strings.Split(strs[i], ",")
-	//	arg1 := strings.ReplaceAll(regParam[0], "cctxt=cctxt.replace(/", "")
-	//	arg1 = strings.ReplaceAll(arg1, "/g", "")
-	//	arg2 := strings.ReplaceAll(regParam[1], "'", "")
-	//	arg2 = strings.ReplaceAll(arg2, ");\r", "")
-	//	content = strings.ReplaceAll(content, arg1, arg2)
-	//}
-	//content = strings.ReplaceAll(content, "var cctxt='", "")
 	_, err := vm.RunString(string(getHtml(textURL)))
 	if err != nil {
 		panic(err)
@@ -103,9 +83,11 @@ func printContent(baseURL string) string {
 	eval = strings.ReplaceAll(eval, "<br />", "\n")
 	eval = strings.ReplaceAll(eval, "&nbsp;", "")
 	eval = strings.ReplaceAll(eval, "';", "")
-	fmt.Printf("\n\n.%s\n\n%s", chaptername, eval)
-	fmt.Println()
 
+	chapterName := doc.Find("h1", "id", "chaptername").Text()
+	fmt.Printf("\n\n%s\n\n%s\n", chapterName, eval)
+
+	println(chapterName)
 	link := doc.Find("a", "id", "pb_next").Attrs()["href"]
 	return link
 }

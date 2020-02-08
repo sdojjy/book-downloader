@@ -8,7 +8,7 @@ require (
 	github.com/dlclark/regexp2 v1.2.0 // indirect
 	github.com/dop251/goja v0.0.0-20200126140343-a7d7d4827263
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
-	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/text v0.3.2
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
