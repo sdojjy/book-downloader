@@ -103,7 +103,7 @@ func printContent(baseURL string) string {
 	eval = strings.ReplaceAll(eval, "<br />", "\n")
 	eval = strings.ReplaceAll(eval, "&nbsp;", "")
 	eval = strings.ReplaceAll(eval, "';", "")
-	fmt.Printf("%s\n%s", chaptername, eval)
+	fmt.Printf("\n\n.%s\n\n%s", chaptername, eval)
 	fmt.Println()
 
 	link := doc.Find("a", "id", "pb_next").Attrs()["href"]
