@@ -25,10 +25,11 @@ func init() {
 }
 func main() {
 	link := printContent(firstURL)
-	for link != "" {
+	for link != "" && strings.HasSuffix(link, ".html") {
 		url := "https://m.rzlib.net" + link
 		link = printContent(url)
 	}
+	panic("没有找到更多章节, 下载完成！")
 }
 
 func getHtml(url string) []byte {
