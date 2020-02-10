@@ -83,7 +83,6 @@ func printContent(baseURL string) string {
 
 	eval = strings.ReplaceAll(eval, "<br />", "\n")
 	eval = strings.ReplaceAll(eval, "&nbsp;", "")
-	eval = strings.ReplaceAll(eval, "';", "")
 
 	chapterName := doc.Find("h1", "id", "chaptername").Text()
 	fmt.Printf("\n\n%s\n\n%s\n", chapterName, eval)
